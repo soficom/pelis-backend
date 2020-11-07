@@ -1,52 +1,99 @@
 const express = require('express');
-const funciones = require('../funciones/funciones');
 const app = express();
+const Pelicula = require('../models/pelicula');
 
-//endpoint para obtener peliculas 
-app.get('/peliculas',function (req, res){
-    if(req.query.nombre != undefined){
-        res.send(funciones.obtenerPeliculasPorNombre(req.query.nombre));
-    }else{
-        res.send(funciones.obtenerPeliculas());
+app.get('/peliculas', function (req, res) {
+  Pelicula.find((err, data) => {
+    if (err) {
+      return res.status(400).json({
+        status: 'ERROR',
+        mensaje: err,
+      });
     }
+    res.json({
+      status: 'OK',
+      data: data,
+    });
+  });
 });
 
-// endpoint para obtener peliculas retro
-app.get('/peliculas/retro', function (req, res){
-    res.send(funciones.obtenerPeliculasReto());
+app.get('/peliculas/:id', function (req, res) {
+  var id = req.params.id;
+  Pelicula.findOne({ imdbID: id }, (err, data) => {
+    if (err) {
+      return res.status(400).json({
+        status: 'ERROR',
+        mensaje: err,
+      });
+    }
+    res.json({
+      status: 'OK',
+      data: data,
+    });
+  });
 });
 
-//endpoint para obtener informacion de una pelicula en especifico 
-app.get('/pelicula/:id', (req,res) => {
-    let id = req.params.id;
-    funciones.obtenerPeliculasPorId(id)
-    .then((peli) => {
-        res.send(peli);
-    }).catch((err)=>{
-        res.send(err);
-    })
+app.post('/peliculas', function (req, res) {
+  let body = req.body;
+  let pelicula = new Pelicula({
+    Titulo: body.Titulo,
+    Genero: body.Genero,
+    Descripcion: body.Descripcion,
+    Calificacion: body.Calificacion,
+    imdbID: body.imdbID,
+  });
+
+  pelicula.save((err, peliDB) => {
+    if (err) {
+      return res.status(400).json({
+        status: 'ERROR',
+        mensaje: err,
+      });
+    }
+
+    res.json({
+      status: 'OK',
+      pelicula: peliDB,
+    });
+  });
 });
 
-//endpoint para crear una pelicula 
-app.post('/pelicula', function(req, res){
-    let peli = req.body;
-    funciones.registrarPelicula(peli);
-    let id = funciones.registrarPelicula(peli);
-    res.send(id);
+app.put('/peliculas/:id', function (req, res) {
+  var id = req.params.id;
+  var toUpdate = req.body;
+
+  Pelicula.findOneAndUpdate(
+    { imdbID: id },
+    toUpdate,
+    { new: true },
+    (err, peliDB) => {
+      if (err) {
+        return res.status(400).json({
+          status: 'ERROR',
+          mensaje: err,
+        });
+      }
+      res.json({
+        status: 'OK',
+        pelicula: peliDB,
+      });
+    }
+  );
 });
 
-//endpoint para modificar una pelicula
-app.put('/pelicula/:id', function(req,res){
-    let respuesta = {
-        id: req.params.id,
-        body: req.body,
-    };
-    res.send(respuesta);
-});
-
-//Endpoint para borrar una pelicula 
-app.delete('/pelicula/:id', function(req,res){
-    res.send(funciones.borrarPelicula(req.params.id));
+app.delete('/peliculas/:id', function (req, res) {
+  var id = req.params.id;
+  Pelicula.findOneAndRemove({ imdbID: id }, (err) => {
+    if (err) {
+      return res.status(400).json({
+        status: 'ERROR',
+        mensaje: err,
+      });
+    }
+    res.status(204).json({
+      status: 'OK',
+    });
+  });
 });
 
 module.exports = app;
