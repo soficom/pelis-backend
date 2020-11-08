@@ -6,10 +6,10 @@ const mongoose = require('mongoose');
 //configuracion de express que nos permite enviar y recibir info del tipo json en req y res.
 app.use(express.json());
 
-app.use(require('./controllers/peliculas.routes'));
+app.use(require('./routes/peliculas'));
 
 mongoose.connect(
-    "mongodb+srv://<USERNAME>:<PASSWORD>@cluster0.wojzg.mongodb.net/<DATABASE_NAME>",
+    process.env.DB,
     {
         useNewUrlParser: true,
         useUnifiedTopology: true,
